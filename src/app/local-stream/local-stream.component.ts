@@ -1,6 +1,9 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AgoraRTCService } from '../service/agora-rtc.service';
 import { IndexService } from '../service/index.service';
+import {FaceDetectService} from '../service/face-detect.service';
+// import {PoseService} from '../service/pose.service'
+import {PoseService} from '../service/pose.service';
 @Component({
   selector: 'app-local-stream',
   templateUrl: './local-stream.component.html',
@@ -29,7 +32,9 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
   selectedFlag: boolean = false;
   constructor(
     private agoraRTC: AgoraRTCService,
-    public indexService: IndexService
+    public indexService: IndexService,
+    // public faceDetect:FaceDetectService, 
+    public Pose:PoseService
   ) {}
 
   ngOnDestroy(): void {
@@ -50,7 +55,7 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
     if (this.agoraRTC.publisher.tracks.video) {
       this.allowDevice = false;
       console.log(this.agoraRTC.publisher.tracks);
-      setTimeout(() => {
+      setTimeout(async() => {
         this.agoraRTC.publisher.tracks.video?.play('stream');
         const a = document.getElementById('video');
         a ? (a.style.display = 'none') : null;
@@ -61,55 +66,86 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
 
   //select background and apply it on stream
   async selectBackgroundImage(imag: number, type: any) {
-    if (this.selectedFlag) {
-      await this.indexService.stopVirtualBackground();
-    }
-    this.selectedFlag = true;
-    this.loading_flag = true;
-    if (!this.selectedImage) {
-      setTimeout(() => {
-        const a = document.getElementById('stream');
-        a ? (a.style.display = 'none') : null;
+      //     setTimeout(() => {
+      //   const a = document.getElementById('stream');
+      //   a ? (a.style.display = 'none') : null;
 
         const b = document.getElementById('video');
         b ? (b.style.display = 'block') : null;
-      }, 500);
-    }
-    this.imageName = imag;
-    if (type === 'image') {
-      this.selectedImage = imag + '.png';
-      this.track = await this.indexService.setVirtualBackground(
-        {
-          sourceType: 'image',
-          sourceValue: '../../assets/' + this.selectedImage,
-        },
-        this.agoraRTC.publisher.tracks.video._mediaStreamTrack
-      );
-    } else {
-      this.selectedImage = '';
-      this.track = await this.indexService.setVirtualBackground(
-        { sourceType: 'blur', sourceValue: `${this.imageName}` },
-        this.agoraRTC.publisher.tracks.video._mediaStreamTrack
-      );
-    }
+      // }, 500);
+    this.track= await this.Pose.poseDetection(this.agoraRTC.publisher.tracks.video._mediaStreamTrack);
     const mediaStream = new MediaStream([this.track]);
-    this.video = this.viewChild.nativeElement;
-    this.mediaStream = mediaStream;
-    this.video.srcObject = mediaStream;
-    this.loading_flag = false;
-    var playPromise = this.video.play();
+     this.video = this.viewChild.nativeElement;
+     this.mediaStream = mediaStream;
+     this.video.srcObject = mediaStream;
+    console.log(this.track,mediaStream,this.video)
 
-    if (playPromise !== undefined) {
+     this.loading_flag = false;
+     var playPromise = this.video.play();
+     if (playPromise !== undefined) {
       playPromise
         .then((_: any) => {
+          console.log("play1")
           // Automatic playback started!
           // Show playing UI.
         })
         .catch((error: any) => {
+          console.log("play2",error);
+        
+
           // Auto-play was prevented
           // Show paused UI.
         });
     }
+    // if (this.selectedFlag) {
+    //   await this.indexService.stopVirtualBackground();
+    // }
+    // this.selectedFlag = true;
+    // this.loading_flag = true;
+    // if (!this.selectedImage) {
+    //   setTimeout(() => {
+    //     const a = document.getElementById('stream');
+    //     a ? (a.style.display = 'none') : null;
+
+    //     const b = document.getElementById('video');
+    //     b ? (b.style.display = 'block') : null;
+    //   }, 500);
+    // }
+    // this.imageName = imag;
+    // if (type === 'image') {
+    //   this.selectedImage = imag + '.png';
+    //   this.track = await this.indexService.setVirtualBackground(
+    //     {
+    //       sourceType: 'image',
+    //       sourceValue: '../../assets/' + this.selectedImage,
+    //     },
+    //     this.agoraRTC.publisher.tracks.video._mediaStreamTrack
+    //   );
+    // } else {
+    //   this.selectedImage = '';
+    //   this.track = await this.indexService.setVirtualBackground(
+    //     { sourceType: 'blur', sourceValue: `${this.imageName}` },
+    //     this.agoraRTC.publisher.tracks.video._mediaStreamTrack
+    //   );
+    // }
+    // const mediaStream = new MediaStream([this.track]);
+    // this.video = this.viewChild.nativeElement;
+    // this.mediaStream = mediaStream;
+    // this.video.srcObject = mediaStream;
+    // this.loading_flag = false;
+    // var playPromise = this.video.play();
+
+    // if (playPromise !== undefined) {
+    //   playPromise
+    //     .then((_: any) => {
+    //       // Automatic playback started!
+    //       // Show playing UI.
+    //     })
+    //     .catch((error: any) => {
+    //       // Auto-play was prevented
+    //       // Show paused UI.
+    //     });
+    // }
   }
 
   //remove background
