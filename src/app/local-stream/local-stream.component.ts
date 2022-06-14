@@ -66,86 +66,55 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
 
   //select background and apply it on stream
   async selectBackgroundImage(imag: number, type: any) {
-      //     setTimeout(() => {
-      //   const a = document.getElementById('stream');
-      //   a ? (a.style.display = 'none') : null;
+    if (this.selectedFlag) {
+      await this.indexService.stopVirtualBackground();
+    }
+    this.selectedFlag = true;
+    this.loading_flag = true;
+    if (!this.selectedImage) {
+      setTimeout(() => {
+        const a = document.getElementById('stream');
+        a ? (a.style.display = 'none') : null;
 
         const b = document.getElementById('video');
         b ? (b.style.display = 'block') : null;
-      // }, 500);
-    this.track= await this.Pose.poseDetection(this.agoraRTC.publisher.tracks.video._mediaStreamTrack);
+      }, 500);
+    }
+    this.imageName = imag;
+    if (type === 'image') {
+      this.selectedImage = imag + '.png';
+      this.track = await this.indexService.setVirtualBackground(
+        {
+          sourceType: 'image',
+          sourceValue: '../../assets/' + this.selectedImage,
+        },
+        this.agoraRTC.publisher.tracks.video._mediaStreamTrack
+      );
+    } else {
+      this.selectedImage = '';
+      this.track = await this.indexService.setVirtualBackground(
+        { sourceType: 'blur', sourceValue: `${this.imageName}` },
+        this.agoraRTC.publisher.tracks.video._mediaStreamTrack
+      );
+    }
     const mediaStream = new MediaStream([this.track]);
-     this.video = this.viewChild.nativeElement;
-     this.mediaStream = mediaStream;
-     this.video.srcObject = mediaStream;
-    console.log(this.track,mediaStream,this.video)
+    this.video = this.viewChild.nativeElement;
+    this.mediaStream = mediaStream;
+    this.video.srcObject = mediaStream;
+    this.loading_flag = false;
+    var playPromise = this.video.play();
 
-     this.loading_flag = false;
-     var playPromise = this.video.play();
-     if (playPromise !== undefined) {
+    if (playPromise !== undefined) {
       playPromise
         .then((_: any) => {
-          console.log("play1")
           // Automatic playback started!
           // Show playing UI.
         })
         .catch((error: any) => {
-          console.log("play2",error);
-        
-
           // Auto-play was prevented
           // Show paused UI.
         });
     }
-    // if (this.selectedFlag) {
-    //   await this.indexService.stopVirtualBackground();
-    // }
-    // this.selectedFlag = true;
-    // this.loading_flag = true;
-    // if (!this.selectedImage) {
-    //   setTimeout(() => {
-    //     const a = document.getElementById('stream');
-    //     a ? (a.style.display = 'none') : null;
-
-    //     const b = document.getElementById('video');
-    //     b ? (b.style.display = 'block') : null;
-    //   }, 500);
-    // }
-    // this.imageName = imag;
-    // if (type === 'image') {
-    //   this.selectedImage = imag + '.png';
-    //   this.track = await this.indexService.setVirtualBackground(
-    //     {
-    //       sourceType: 'image',
-    //       sourceValue: '../../assets/' + this.selectedImage,
-    //     },
-    //     this.agoraRTC.publisher.tracks.video._mediaStreamTrack
-    //   );
-    // } else {
-    //   this.selectedImage = '';
-    //   this.track = await this.indexService.setVirtualBackground(
-    //     { sourceType: 'blur', sourceValue: `${this.imageName}` },
-    //     this.agoraRTC.publisher.tracks.video._mediaStreamTrack
-    //   );
-    // }
-    // const mediaStream = new MediaStream([this.track]);
-    // this.video = this.viewChild.nativeElement;
-    // this.mediaStream = mediaStream;
-    // this.video.srcObject = mediaStream;
-    // this.loading_flag = false;
-    // var playPromise = this.video.play();
-
-    // if (playPromise !== undefined) {
-    //   playPromise
-    //     .then((_: any) => {
-    //       // Automatic playback started!
-    //       // Show playing UI.
-    //     })
-    //     .catch((error: any) => {
-    //       // Auto-play was prevented
-    //       // Show paused UI.
-    //     });
-    // }
   }
 
   //remove background
