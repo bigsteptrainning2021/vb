@@ -3,6 +3,8 @@ import { AgoraRTCService } from '../service/agora-rtc.service';
 import { IndexService } from '../service/index.service';
 import {FaceDetectService} from '../service/face-detect.service';
 // import {PoseService} from '../service/pose.service'
+import * as fp from "fingerpose";
+
 import {PoseService} from '../service/pose.service';
 @Component({
   selector: 'app-local-stream',
@@ -30,6 +32,9 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
   allowDevice: boolean = true;
   loading_flag: boolean = false;
   selectedFlag: boolean = false;
+  file: any;
+  imageUrl:any=[];
+  uploadedImage: boolean;
   constructor(
     private agoraRTC: AgoraRTCService,
     public indexService: IndexService,
@@ -38,6 +43,8 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnDestroy(): void {
+    localStorage.removeItem('image');
+
     this.indexService.stopVirtualBackground();
   }
 
@@ -65,7 +72,9 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
 
 
   //select background and apply it on stream
-  async selectBackgroundImage(imag: number, type: any) {
+  async selectBackgroundImage(imag: any, type: any) {
+    this.uploadedImage=false;
+
     if (this.selectedFlag) {
       await this.indexService.stopVirtualBackground();
     }
@@ -117,11 +126,59 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
     }
   }
 
+  async selectBackgroundImage1(imag: number, type: any) {
+    this.uploadedImage=true;
+    if (this.selectedFlag) {
+      await this.indexService.stopVirtualBackground();
+    }
+    this.selectedFlag = true;
+    this.loading_flag = true;
+    if (!this.selectedImage) {
+      setTimeout(() => {
+        const a = document.getElementById('stream');
+        a ? (a.style.display = 'none') : null;
+
+        const b = document.getElementById('video');
+        b ? (b.style.display = 'block') : null;
+      }, 500);
+    }
+    this.imageName = imag;
+    if (type === 'image') {
+      // this.selectedImage = imag + '.png';
+      this.track = await this.indexService.setVirtualBackground(
+        {
+          sourceType: 'image',
+          sourceValue: this.imageName,
+        },
+        this.agoraRTC.publisher.tracks.video._mediaStreamTrack
+      );
+    }
+    const mediaStream = new MediaStream([this.track]);
+    this.video = this.viewChild.nativeElement;
+    this.mediaStream = mediaStream;
+    this.video.srcObject = mediaStream;
+    this.loading_flag = false;
+    var playPromise = this.video.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then((_: any) => {
+          // Automatic playback started!
+          // Show playing UI.
+        })
+        .catch((error: any) => {
+          // Auto-play was prevented
+          // Show paused UI.
+        });
+    }
+  }
+
   //remove background
   async removeBackground() {
     this.selectedImage = '';
     this.imageName = '';
     this.selectedFlag = false;
+    this.uploadedImage=false;
 
     const a = document.getElementById('stream');
     a ? (a.style.display = 'block') : null;
@@ -135,12 +192,32 @@ export class LocalStreamComponent implements OnInit, OnDestroy {
   async pauseVideo() {
     this.isStreamplay = !this.isStreamplay;
     await this.agoraRTC.publisher.tracks.video.setEnabled(this.isStreamplay);
-
     if (this.imageName && this.isStreamplay && this.selectedFlag) {
       await this.indexService.stopVirtualBackground();
       if (this.imageName === 20)
         await this.selectBackgroundImage(this.imageName, 'blur');
+      else if(this.uploadedImage)
+        await this.selectBackgroundImage1(this.imageName, 'image');
       else await this.selectBackgroundImage(this.imageName, 'image');
     }
+  }
+
+  async onChange(event) {
+    let reader = new FileReader(); // HTML5 FileReader API
+    let file = event.target.files[0];
+    if (event.target.files && event.target.files[0]) {
+      reader.addEventListener('load', (event) => {
+        setTimeout(() => {
+          let data={
+            img:event.target.result}
+          this.imageUrl.push(data);
+          localStorage.setItem('image', this.imageUrl);
+        }, 1000);
+      });
+      reader.readAsDataURL(file);
+      // When file uploads set it to file formcontrol
+
+    }
+    console.log(file,this.imageUrl,reader.result)
   }
 }

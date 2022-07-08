@@ -25,16 +25,30 @@
     
   </div>
   <div class="backgrounds">
-    <div *ngFor="let item of [].constructor(6); index as i">
+    <div *ngFor="let item of [].constructor(8); index as i">
       <div
         class="list"
         title="background"
-        [ngClass]="{active: i===imageName-1}"
+        [ngClass]="{active: i===imageName-1, disable:!isStreamplay}"
         (click)="selectBackgroundImage(i + 1, 'image')"
       >
         <img src="../../assets/{{ i + 1 }}.png" />
       </div>
     </div>
-    <div class="box" (click)="selectBackgroundImage(20, 'blur')" [ngClass]="{active: imageName===20}">Blurr</div>
+
+    <div *ngFor="let item of imageUrl; index as i">
+      <div
+        class="list"
+        title="background"
+        [ngClass]="{active: imageName===item.img, disable:!isStreamplay}"
+        (click)="selectBackgroundImage1(item.img, 'image')"
+      >
+        <img src="{{item.img}}" />
+      </div>
+    </div>
+    <div class="box" (click)="selectBackgroundImage(20, 'blur')" [ngClass]="{active: imageName===20, disable:!isStreamplay}">Blurr</div>
   </div>
+<p *ngIf="!allowDevice">*Note:You are not able to change or apply background when video feed is OFF</p>
+<input type='file' id="uploadBannerImage" (change)="onChange($event);" accept="image/*"/>
 </div>
+
