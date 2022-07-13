@@ -1,1 +1,48 @@
 /* You can add global styles to this file, and also import other style files */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;1,400;1,500;1,600&display=swap");
+body {
+  // background-color: #02032b;
+  background: #081740; /* fallback for old browsers */
+  color: #fff;
+  font-family: "Montserrat", sans-serif;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+.intro {
+  height: 100%;
+}
+.intro h1 {
+  color: #fff;
+}
+.intro button {
+  background: #ec8844;
+  color: #fff;
+  border-radius: 25px;
+  padding: 15px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  border: none;
+  box-shadow: none;
+}
+.intro button:hover {
+  background: #ea792d;
+}
+.parent {
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+.backgrounds {
+  max-width: 960px;
+  flex-wrap: wrap;
+  height: auto !important;
+}
+.buttons {
+  margin-top: 20px !important;
+  margin-bottom: 30px !important;
+}
+.stream {
+  border: none !important;
+  border-radius: 4px;
+  overflow: hidden;
+}
